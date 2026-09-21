@@ -25,15 +25,19 @@ public class GenerateTaxCertificate
         try
         {
             var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
-            var donationIdValue = query["donationId"];
 
-            if (!int.TryParse(donationIdValue, out var donationId) || donationId <= 0)
+            var donationIdValue = query["donationId"];
+            var donorName = query["donorName"];
+
+            if (!int.TryParse(donationIdValue, out var donationId) ||
+                donationId <= 0)
             {
                 _logger.LogWarning(
                     "Invalid donationId supplied: {DonationId}",
                     donationIdValue);
 
-                var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+                var badRequest = req.CreateResponse(
+                    HttpStatusCode.BadRequest);
 
                 await badRequest.WriteAsJsonAsync(new
                 {
@@ -44,19 +48,27 @@ public class GenerateTaxCertificate
                 return badRequest;
             }
 
+            if (string.IsNullOrWhiteSpace(donorName))
+            {
+                donorName = "Anonymous Donor";
+            }
+
             _logger.LogInformation(
-                "Generating dummy tax certificate for DonationID {DonationId}.",
-                donationId);
+                "Generating dummy tax certificate for DonationID {DonationId} for {DonorName}.",
+                donationId,
+                donorName);
 
             var certificateNumber =
                 $"GOTG-TAX-{DateTime.UtcNow:yyyyMMdd}-{donationId:D6}";
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
+            var response = req.CreateResponse(
+                HttpStatusCode.OK);
 
             await response.WriteAsJsonAsync(new
             {
                 success = true,
                 donationId,
+                donorName,
                 certificateNumber,
                 status = "Generated",
                 generatedAt = DateTime.UtcNow,
@@ -77,7 +89,8 @@ public class GenerateTaxCertificate
             await errorResponse.WriteAsJsonAsync(new
             {
                 success = false,
-                message = "An unexpected error occurred while generating the tax certificate."
+                message =
+                    "An unexpected error occurred while generating the tax certificate."
             });
 
             return errorResponse;
