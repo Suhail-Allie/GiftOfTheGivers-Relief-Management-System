@@ -14,7 +14,7 @@ public class DonationSummaryFormatterTests
             "Once-off");
 
         Assert.Equal(
-            "ZAR 1,500.00 - Once-off",
+            "ZAR 1,500.50 - Once-off",
             result);
     }
 
