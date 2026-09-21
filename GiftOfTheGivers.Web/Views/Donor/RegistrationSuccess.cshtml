@@ -1,0 +1,63 @@
+@{
+    ViewData["Title"] = "Registration Successful";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="service-card bg-white p-4 p-lg-5 text-center">
+
+                    <span class="section-label">
+                        Registration Complete
+                    </span>
+
+                    <h1 class="display-5 fw-bold mt-3 mb-3">
+                        Your donor account is ready.
+                    </h1>
+
+                    <p class="fs-5 text-secondary mb-4">
+                        Your account has been created successfully and
+                        you are now signed in as a donor.
+                    </p>
+
+                    <div class="hero-info-card text-start mb-4">
+                        <span class="info-card-label">
+                            Donor Access
+                        </span>
+
+                        <h2>
+                            You can now continue to the donation platform.
+                        </h2>
+
+                        <p class="mb-0">
+                            Registered donor accounts can support once-off
+                            donations and recurring donation options through
+                            the relief management system.
+                        </p>
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row
+                                justify-content-center gap-3">
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-outline-dark btn-lg">
+                            Return Home
+                        </a>
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-primary btn-lg">
+                            Continue
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

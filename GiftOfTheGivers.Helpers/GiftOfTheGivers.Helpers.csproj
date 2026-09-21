@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<PackageId>GiftOfTheGivers.Helpers</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>GiftOfTheGivers Development Team</Authors>
+		<Description>Reusable donation and tax certificate formatting utilities for the Gift of the Givers relief management system.</Description>
+		<PackageTags>donations;tax-certificates;gift-of-the-givers;utilities</PackageTags>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+</Project>

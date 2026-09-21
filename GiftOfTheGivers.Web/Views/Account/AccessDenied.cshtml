@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div class="service-card bg-white p-4 p-lg-5 text-center">
+
+                    <span class="section-label">
+                        Restricted Access
+                    </span>
+
+                    <h1 class="display-5 fw-bold mt-3 mb-3">
+                        You don't have permission to access this page.
+                    </h1>
+
+                    <p class="fs-5 text-secondary mb-4">
+                        This area of the relief management system is
+                        restricted to authorised users with the required role.
+                    </p>
+
+                    <div class="hero-info-card text-start mb-4">
+
+                        <span class="info-card-label">
+                            Role-Based Security
+                        </span>
+
+                        <h2>
+                            This content is protected.
+                        </h2>
+
+                        <p>
+                            Your account is signed in successfully, but it
+                            does not have the role required to access the
+                            requested functionality.
+                        </p>
+
+                        <div class="hero-stat">
+                            <strong>Access denied</strong>
+
+                            <span>
+                                ASP.NET Identity role authorisation
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row
+                                justify-content-center gap-3">
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-outline-dark btn-lg">
+                            Return Home
+                        </a>
+
+                        <a asp-controller="Donation"
+                           asp-action="Index"
+                           class="btn btn-primary btn-lg">
+                            Go to Donations
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

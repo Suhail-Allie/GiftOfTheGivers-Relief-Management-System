@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Employee Dashboard";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="mb-5">
+            <span class="section-label">Employee Area</span>
+
+            <h1 class="display-4 fw-bold mb-3">
+                Employee Dashboard
+            </h1>
+
+            <p class="fs-5 text-secondary">
+                Access the tools used to review volunteer registrations
+                and manage relief-project information.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="service-card h-100">
+                    <div class="service-number">01</div>
+
+                    <h3>Volunteer Registrations</h3>
+
+                    <p>
+                        Review submitted volunteer-interest registrations,
+                        including skills and availability.
+                    </p>
+
+                    <a asp-controller="Employee"
+                       asp-action="Volunteers"
+                       class="card-link">
+                        View volunteer signups
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="service-card h-100">
+                    <div class="service-number">02</div>
+
+                    <h3>Relief Project Updates</h3>
+
+                    <p>
+                        Post and manage updates for ongoing humanitarian
+                        relief projects.
+                    </p>
+
+                    <a asp-controller="Employee"
+                       asp-action="ProjectUpdates"
+                       class="card-link">
+                        Manage project updates
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,56 @@
+@{
+    ViewData["Title"] = "Volunteer Registration Submitted";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-5">
+                    <span class="section-label">Submission Received</span>
+
+                    <h1 class="display-4 fw-bold mb-4">
+                        Thank you for offering to help.
+                    </h1>
+
+                    <p class="fs-5 text-secondary">
+                        Your volunteer interest has been recorded successfully.
+                    </p>
+                </div>
+
+                <div class="hero-info-card text-center">
+                    <span class="info-card-label">
+                        What happens next?
+                    </span>
+
+                    <h2>Your details are now available for review.</h2>
+
+                    <p>
+                        Gift of the Givers employees will be able to view
+                        volunteer registrations when coordinating future
+                        humanitarian relief activities.
+                    </p>
+
+                    <div class="hero-stat">
+                        <strong>Registration status</strong>
+                        <span>Pending review</span>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                        Return Home
+                    </a>
+
+                    <a asp-controller="Volunteer"
+                       asp-action="Index"
+                       class="btn btn-outline-dark ms-2">
+                        Submit Another Registration
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

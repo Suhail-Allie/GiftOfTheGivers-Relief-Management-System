@@ -1,0 +1,169 @@
+@model GiftOfTheGivers.Web.Models.Database.TaxCertificate
+
+@{
+    ViewData["Title"] = "Tax Certificate";
+
+    var donation = Model.Donation;
+
+    var donorName = donation.IsAnonymous
+        ? "Anonymous Donor"
+        : donation.Donor?.FullName ?? "Registered Donor";
+
+    var projectName = donation.ReliefProject?.ProjectName
+        ?? "General Relief Fund";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+                <div class="service-card bg-white p-4 p-lg-5">
+
+                    <div class="text-center mb-5">
+                        <span class="section-label">
+                            Donation Record
+                        </span>
+
+                        <h1 class="display-5 fw-bold mt-3 mb-3">
+                            Tax Certificate
+                        </h1>
+
+                        <p class="fs-5 text-secondary mb-0">
+                            Placeholder donation certificate generated
+                            by the relief management prototype.
+                        </p>
+                    </div>
+
+                    <div class="hero-info-card mb-4">
+
+                        <div class="d-flex flex-column flex-md-row
+                                    justify-content-between
+                                    align-items-md-start
+                                    gap-4 mb-4">
+
+                            <div>
+                                <span class="info-card-label">
+                                    Certificate Number
+                                </span>
+
+                                <h2 class="mb-0">
+                                    @Model.CertificateNumber
+                                </h2>
+                            </div>
+
+                            <div class="text-md-end">
+                                <small class="text-uppercase d-block mb-1">
+                                    Status
+                                </small>
+
+                                <strong>
+                                    @Model.CertificateStatus
+                                </strong>
+                            </div>
+
+                        </div>
+
+                        <hr class="border-light opacity-25 my-4" />
+
+                        <div class="row g-4">
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Donor
+                                </small>
+
+                                <strong>
+                                    @donorName
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Donation Reference
+                                </small>
+
+                                <strong>
+                                    DON-@donation.DonationId.ToString("D6")
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Donation Amount
+                                </small>
+
+                                <strong class="fs-4">
+                                    @donation.CurrencyCode
+                                    @donation.Amount.ToString("N2")
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Relief Project
+                                </small>
+
+                                <strong>
+                                    @projectName
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Donation Date
+                                </small>
+
+                                <strong>
+                                    @(donation.DonationDate
+                                        .ToLocalTime()
+                                        .ToString("dd MMM yyyy"))
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Certificate Generated
+                                </small>
+
+                                <strong>
+                                    @(Model.GeneratedAt
+                                        .ToLocalTime()
+                                        .ToString("dd MMM yyyy HH:mm"))
+                                </strong>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border mb-4">
+                        <strong>Prototype notice:</strong>
+                        This is a placeholder tax certificate created for
+                        the Part 1 assessment prototype. It does not represent
+                        an official tax document issued by Gift of the Givers
+                        or a revenue authority.
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row
+                                justify-content-center gap-3">
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-outline-dark btn-lg">
+                            Return Home
+                        </a>
+
+                        <button type="button"
+                                class="btn btn-primary btn-lg"
+                                onclick="window.print()">
+                            Print Certificate
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>

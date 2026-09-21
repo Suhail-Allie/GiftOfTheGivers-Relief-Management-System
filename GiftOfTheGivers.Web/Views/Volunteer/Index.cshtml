@@ -1,0 +1,143 @@
+@model GiftOfTheGivers.Web.Models.ViewModels.VolunteerInterestViewModel
+
+@{
+    ViewData["Title"] = "Volunteer";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-5">
+                <span class="section-label">Volunteer</span>
+
+                <h1 class="display-4 fw-bold mb-4">
+                    Register your interest to help.
+                </h1>
+
+                <p class="fs-5 text-secondary">
+                    Volunteers play an important role in supporting humanitarian
+                    relief efforts. Use this form to provide your skills and
+                    availability.
+                </p>
+
+                <div class="hero-info-card mt-4">
+                    <span class="info-card-label">How it works</span>
+
+                    <h2>Share how you can assist.</h2>
+
+                    <p>
+                        Your information will be recorded so that Gift of the
+                        Givers employees can review volunteer registrations
+                        when support is required.
+                    </p>
+
+                    <div class="hero-stat">
+                        <strong>Information collected</strong>
+                        <span>Name • Skills • Availability</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="service-card bg-white p-4 p-lg-5">
+                    <h2 class="fw-bold mb-2">Volunteer Interest Form</h2>
+
+                    <p class="text-secondary mb-4">
+                        Complete the fields below to register your interest.
+                    </p>
+
+                    <form asp-controller="Volunteer"
+                          asp-action="Index"
+                          method="post">
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="FullName"
+                                   class="form-label"></label>
+
+                            <input asp-for="FullName"
+                                   class="form-control"
+                                   autocomplete="name"
+                                   placeholder="Enter your full name" />
+
+                            <span asp-validation-for="FullName"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email"
+                                   class="form-label"></label>
+
+                            <input asp-for="Email"
+                                   class="form-control"
+                                   autocomplete="email"
+                                   placeholder="Enter your email address" />
+
+                            <span asp-validation-for="Email"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber"
+                                   class="form-label"></label>
+
+                            <input asp-for="PhoneNumber"
+                                   class="form-control"
+                                   autocomplete="tel"
+                                   placeholder="Optional" />
+
+                            <span asp-validation-for="PhoneNumber"
+                                  class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Skills"
+                                   class="form-label"></label>
+
+                            <textarea asp-for="Skills"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="For example: medical support, logistics, administration, construction"></textarea>
+
+                            <span asp-validation-for="Skills"
+                                  class="text-danger"></span>
+
+                            <div class="form-text">
+                                Briefly describe the skills you could contribute
+                                during a relief effort.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Availability"
+                                   class="form-label"></label>
+
+                            <textarea asp-for="Availability"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="For example: weekends, evenings, short notice"></textarea>
+
+                            <span asp-validation-for="Availability"
+                                  class="text-danger"></span>
+
+                            <div class="form-text">
+                                Let us know when you would generally be available.
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary btn-lg w-100">
+                            Submit Volunteer Interest
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

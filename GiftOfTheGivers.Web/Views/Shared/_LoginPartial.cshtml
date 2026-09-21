@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav ms-auto align-items-lg-center">
+
+@if (SignInManager.IsSignedIn(User))
+{
+    @if (User.IsInRole("Employee"))
+    {
+        <li class="nav-item">
+            <a class="nav-link"
+               asp-controller="Employee"
+               asp-action="Index">
+                Employee Dashboard
+            </a>
+        </li>
+    }
+
+    <li class="nav-item">
+        <span class="nav-link auth-user">
+            @User.Identity?.Name
+        </span>
+    </li>
+
+    <li class="nav-item">
+        <form asp-area="Identity"
+              asp-page="/Account/Logout"
+              asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+              method="post"
+              class="d-inline">
+
+            <button type="submit"
+                    class="nav-link btn btn-link auth-link">
+                Logout
+            </button>
+
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link"
+           asp-controller="Donor"
+           asp-action="Register">
+            Register
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link"
+           asp-controller="Account"
+           asp-action="Login">
+            Login
+        </a>
+    </li>
+}
+
+</ul>

@@ -1,0 +1,151 @@
+@model GiftOfTheGivers.Web.Models.ViewModels.ProjectUpdateViewModel
+
+@{
+    ViewData["Title"] = "Relief Project Updates";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-5">
+                <span class="section-label">Employee Area</span>
+
+                <h1 class="display-4 fw-bold mb-4">
+                    Post a relief project update.
+                </h1>
+
+                <p class="fs-5 text-secondary">
+                    Share current information about ongoing humanitarian
+                    relief projects through the employee platform.
+                </p>
+
+                <div class="hero-info-card mt-4">
+                    <span class="info-card-label">
+                        Project Communication
+                    </span>
+
+                    <h2>
+                        Keep relief information current.
+                    </h2>
+
+                    <p>
+                        Updates submitted here are linked to both the selected
+                        relief project and the Employee posting the update.
+                    </p>
+
+                    <div class="hero-stat">
+                        <strong>Employee access only</strong>
+                        <span>
+                            Protected by role-based authorisation
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="service-card bg-white p-4 p-lg-5">
+                    <div class="d-flex flex-column flex-md-row
+                                justify-content-between
+                                align-items-md-center
+                                gap-3 mb-4">
+
+                        <div>
+                            <h2 class="fw-bold mb-1">
+                                New Project Update
+                            </h2>
+
+                            <p class="text-secondary mb-0">
+                                Select an active project and enter the latest
+                                information.
+                            </p>
+                        </div>
+
+                        <a asp-controller="Employee"
+                           asp-action="Index"
+                           class="btn btn-outline-dark">
+                            Back to Dashboard
+                        </a>
+                    </div>
+
+                    @if (TempData["ProjectUpdateSuccess"] != null)
+                    {
+                        <div class="alert alert-success"
+                             role="alert">
+                            @TempData["ProjectUpdateSuccess"]
+                        </div>
+                    }
+
+                    <form asp-controller="Employee"
+                          asp-action="ProjectUpdates"
+                          method="post">
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ReliefProjectId"
+                                   class="form-label">
+                            </label>
+
+                            <select asp-for="ReliefProjectId"
+                                    asp-items="ViewBag.ReliefProjects"
+                                    class="form-select">
+
+                                <option value="0">
+                                    Select an active relief project
+                                </option>
+                            </select>
+
+                            <span asp-validation-for="ReliefProjectId"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="UpdateTitle"
+                                   class="form-label">
+                            </label>
+
+                            <input asp-for="UpdateTitle"
+                                   class="form-control"
+                                   placeholder="Enter a short update title" />
+
+                            <span asp-validation-for="UpdateTitle"
+                                  class="text-danger">
+                            </span>
+
+                            <div class="form-text">
+                                Maximum 200 characters.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="UpdateContent"
+                                   class="form-label">
+                            </label>
+
+                            <textarea asp-for="UpdateContent"
+                                      class="form-control"
+                                      rows="7"
+                                      placeholder="Enter the latest relief project information"></textarea>
+
+                            <span asp-validation-for="UpdateContent"
+                                  class="text-danger">
+                            </span>
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary btn-lg w-100">
+                            Post Project Update
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

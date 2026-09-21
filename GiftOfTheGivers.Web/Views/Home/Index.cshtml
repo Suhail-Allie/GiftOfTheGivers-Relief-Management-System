@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-7">
+                <span class="section-label">Humanitarian Relief Platform</span>
+
+                <h1 class="hero-title">
+                    Supporting relief efforts when communities need it most.
+                </h1>
+
+                <p class="hero-text">
+                    A central platform supporting Gift of the Givers relief initiatives,
+                    donations, volunteers and ongoing disaster-response projects.
+                </p>
+
+                <div class="hero-actions">
+                    <a asp-controller="Donation"
+                       asp-action="Index"
+                       class="btn btn-primary btn-lg">
+                        Make a Donation
+                    </a>
+
+                    <a asp-controller="Volunteer"
+                       asp-action="Index"
+                       class="btn btn-outline-dark btn-lg">
+                        Become a Volunteer
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-5 mt-5 mt-lg-0">
+                <div class="hero-info-card">
+                    <span class="info-card-label">Our Purpose</span>
+
+                    <h2>
+                        Relief. Support. Action.
+                    </h2>
+
+                    <p>
+                        Bringing donors, volunteers and relief information together
+                        through one accessible digital platform.
+                    </p>
+
+                    <div class="hero-stat">
+                        <strong>One platform</strong>
+                        <span>for coordinated humanitarian support</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="home-services">
+    <div class="container">
+        <div class="section-heading text-center">
+            <span class="section-label">How You Can Help</span>
+
+            <h2>Take part in making a difference.</h2>
+
+            <p>
+                Whether through a contribution or your time and skills,
+                the platform makes it easier to support relief efforts.
+            </p>
+        </div>
+
+        <div class="row g-4 mt-4">
+            <div class="col-md-4">
+                <div class="service-card h-100">
+                    <div class="service-number">01</div>
+
+                    <h3>Donate</h3>
+
+                    <p>
+                        Support relief projects through once-off or recurring
+                        donations in ZAR, USD or EUR.
+                    </p>
+
+                    <a asp-controller="Donation"
+                       asp-action="Index"
+                       class="card-link">
+                        View donation options
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="service-card h-100">
+                    <div class="service-number">02</div>
+
+                    <h3>Volunteer</h3>
+
+                    <p>
+                        Register your skills and availability to express
+                        interest in supporting future relief efforts.
+                    </p>
+
+                    <a asp-controller="Volunteer"
+                       asp-action="Index"
+                       class="card-link">
+                        Register your interest
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="service-card h-100">
+                    <div class="service-number">03</div>
+
+                    <h3>Stay Informed</h3>
+
+                    <p>
+                        Follow updates from ongoing relief projects and
+                        understand where support is being directed.
+                    </p>
+
+                    <a asp-controller="Home"
+                       asp-action="About"
+                       class="card-link">
+                        Learn more
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

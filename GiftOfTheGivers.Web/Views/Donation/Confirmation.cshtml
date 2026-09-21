@@ -1,0 +1,186 @@
+@model GiftOfTheGivers.Web.Models.Database.Donation
+
+@{
+    ViewData["Title"] = "Donation Confirmation";
+
+    var projectName = Model.ReliefProject?.ProjectName
+        ?? "General Relief Fund";
+
+    var donationType = Model.DonationType == "Recurring"
+        ? "Recurring donation"
+        : "Once-off donation";
+}
+
+<section class="py-5">
+    <div class="container py-lg-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+
+                <div class="service-card bg-white p-4 p-lg-5">
+
+                    <div class="text-center mb-5">
+                        <span class="section-label">
+                            Donation Confirmed
+                        </span>
+
+                        <h1 class="display-5 fw-bold mt-3 mb-3">
+                            Thank you for your support.
+                        </h1>
+
+                        <p class="fs-5 text-secondary mb-0">
+                            Your donation has been recorded successfully
+                            in the relief management system.
+                        </p>
+                    </div>
+
+                    <div class="hero-info-card mb-4">
+
+                        <span class="info-card-label">
+                            Donation Summary
+                        </span>
+
+                        <h2 class="mb-4">
+                            @donationType
+                        </h2>
+
+                        <div class="row g-4">
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Amount
+                                </small>
+
+                                <strong class="fs-4">
+                                    @Model.CurrencyCode
+                                    @Model.Amount.ToString("N2")
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Relief project
+                                </small>
+
+                                <strong>
+                                    @projectName
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Donation type
+                                </small>
+
+                                <strong>
+                                    @donationType
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Status
+                                </small>
+
+                                <strong>
+                                    @Model.DonationStatus
+                                </strong>
+                            </div>
+
+                            @if (Model.DonationType == "Recurring" &&
+                                 Model.RecurringSchedule != null)
+                            {
+                                <div class="col-md-6">
+                                    <small class="text-uppercase d-block mb-1">
+                                        Frequency
+                                    </small>
+
+                                    <strong>
+                                        @Model.RecurringSchedule.Frequency
+                                    </strong>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <small class="text-uppercase d-block mb-1">
+                                        Start date
+                                    </small>
+
+                                    <strong>
+                                        @(Model.RecurringSchedule.StartDate
+                                            .ToString("dd MMM yyyy"))
+                                    </strong>
+                                </div>
+                            }
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Anonymous
+                                </small>
+
+                                <strong>
+                                    @(Model.IsAnonymous ? "Yes" : "No")
+                                </strong>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-uppercase d-block mb-1">
+                                    Reference
+                                </small>
+
+                                <strong>
+                                    DON-@Model.DonationId.ToString("D6")
+                                </strong>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border mb-4">
+                        <strong>Prototype confirmation:</strong>
+                        This page confirms that the donation information
+                        was recorded by the assessment prototype. No real
+                        card or banking transaction has been processed.
+                    </div>
+
+                    <div class="d-flex flex-column flex-sm-row
+                                justify-content-center gap-3">
+
+                        <a asp-controller="Home"
+                           asp-action="Index"
+                           class="btn btn-outline-dark btn-lg">
+                            Return Home
+                        </a>
+
+                        @if (Model.IsAnonymous)
+                        {
+                            <a asp-controller="Donation"
+                               asp-action="TaxCertificate"
+                               asp-route-id="@Model.DonationId"
+                               class="btn btn-primary btn-lg">
+                                View Tax Certificate
+                            </a>
+                        }
+                        else if (User.Identity?.IsAuthenticated == true &&
+                                 User.IsInRole("Donor"))
+                        {
+                            <a asp-controller="Donation"
+                               asp-action="TaxCertificate"
+                               asp-route-id="@Model.DonationId"
+                               class="btn btn-primary btn-lg">
+                                View Tax Certificate
+                            </a>
+                        }
+
+                        <a asp-controller="Donation"
+                           asp-action="Index"
+                           class="btn btn-primary btn-lg">
+                            Make Another Donation
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
