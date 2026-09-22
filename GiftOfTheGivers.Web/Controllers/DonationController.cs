@@ -1,3 +1,4 @@
+using GiftOfTheGivers.Helpers;
 using GiftOfTheGivers.Web.Data.Relief;
 using GiftOfTheGivers.Web.Models.Database;
 using GiftOfTheGivers.Web.Models.ViewModels;
@@ -198,6 +199,13 @@ public class DonationController : Controller
 
             await _context.SaveChangesAsync();
 
+            var donationReference =
+                DonationReferenceFormatter.Format(
+                    checked((int)donation.DonationId),
+                    donation.DonationDate);
+
+            TempData["DonationReference"] = donationReference;
+
             return RedirectToAction(
                 nameof(Confirmation),
                 new { id = donation.DonationId });
@@ -253,6 +261,16 @@ public class DonationController : Controller
             recurringCertificate);
 
         await _context.SaveChangesAsync();
+
+        await _context.SaveChangesAsync();
+
+        var recurringDonationReference =
+            DonationReferenceFormatter.Format(
+                checked((int)recurringDonation.DonationId),
+                recurringDonation.DonationDate);
+
+        TempData["DonationReference"] =
+            recurringDonationReference;
 
         return RedirectToAction(
             nameof(Confirmation),
