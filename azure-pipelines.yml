@@ -39,6 +39,7 @@ stages:
         command: 'restore'
         projects: '$(solution)'
         feedsToUse: 'select'
+        vstsFeed: 'Gift of the Givers Relief Management System/GiftOfTheGivers'
         includeNuGetOrg: true
 
     - task: DotNetCoreCLI@2
@@ -69,10 +70,19 @@ stages:
         version: '10.x'
 
     - task: DotNetCoreCLI@2
+      displayName: 'Restore test dependencies'
+      inputs:
+        command: 'restore'
+        projects: '$(solution)'
+        feedsToUse: 'select'
+        vstsFeed: 'Gift of the Givers Relief Management System/GiftOfTheGivers'
+        includeNuGetOrg: true
+
+    - task: DotNetCoreCLI@2
       displayName: 'Run automated tests'
       inputs:
         command: 'test'
         projects: '$(testProject)'
-        arguments: '--configuration $(buildConfiguration)'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
         publishTestResults: true
         testRunTitle: 'Gift of the Givers Automated Tests'
