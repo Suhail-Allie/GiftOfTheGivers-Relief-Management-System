@@ -9,6 +9,10 @@
     var donationType = Model.DonationType == "Recurring"
         ? "Recurring donation"
         : "Once-off donation";
+
+    var donationReference =
+TempData["DonationReference"]?.ToString()
+?? $"DON-{Model.DonationId:D6}";
 }
 
 <section class="py-5">
@@ -111,15 +115,7 @@
                                 </div>
                             }
 
-                            <div class="col-md-6">
-                                <small class="text-uppercase d-block mb-1">
-                                    Anonymous
-                                </small>
-
-                                <strong>
-                                    @(Model.IsAnonymous ? "Yes" : "No")
-                                </strong>
-                            </div>
+                            
 
                             <div class="col-md-6">
                                 <small class="text-uppercase d-block mb-1">
