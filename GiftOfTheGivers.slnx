@@ -2,5 +2,6 @@
   <Project Path="GiftOfTheGivers.Functions/GiftOfTheGivers.Functions.csproj" />
   <Project Path="GiftOfTheGivers.Helpers/GiftOfTheGivers.Helpers.csproj" Id="ccb7d023-970b-4a03-9481-e778bd1f9cd2" />
   <Project Path="GiftOfTheGivers.Tests/GiftOfTheGivers.Tests.csproj" Id="d94e0a08-5f8f-4867-8e1e-8921f165340b" />
+  <Project Path="GiftOfTheGivers.UI.Tests/GiftOfTheGivers.UI.Tests.csproj" />
   <Project Path="GiftOfTheGivers.Web/GiftOfTheGivers.Web.csproj" />
 </Solution>

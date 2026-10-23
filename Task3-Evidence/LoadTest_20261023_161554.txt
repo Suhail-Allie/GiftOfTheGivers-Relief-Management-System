@@ -1,0 +1,14 @@
+﻿Local website load test
+Date: 2026-10-23 16:19:52
+Target: http://localhost:5080
+Virtual users: 40
+Iterations per user: 10
+Total requests: 400
+Successful requests: 400
+Failed requests: 0
+Average response time (ms): 580.97
+Median / P50 response time (ms): 68.18
+P95 response time (ms): 3926.03
+Observed throughput (requests/second): 1.98
+Routes: /, /Account/Login, /Volunteer/Index, /Donation/Index
+CSV results: C:\Users\Tuella\Documents\GiftOfTheGivers\Task3-Evidence\LoadTest_20261023_161554.csv

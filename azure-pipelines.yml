@@ -3,7 +3,6 @@ trigger:
     include:
       - main
 
-
 variables:
   buildConfiguration: 'Release'
   solution: 'GiftOfTheGivers.slnx'
@@ -13,14 +12,12 @@ pool:
   vmImage: 'windows-latest'
 
 stages:
-
 - stage: Build
   displayName: 'Build Solution'
   jobs:
   - job: BuildJob
     displayName: 'Restore and Build'
     steps:
-
     - task: UseDotNet@2
       displayName: 'Install .NET 8 SDK'
       inputs:
@@ -54,9 +51,8 @@ stages:
   dependsOn: Build
   jobs:
   - job: TestJob
-    displayName: 'Run xUnit Tests'
+    displayName: 'Run Unit and Integration Tests'
     steps:
-
     - task: UseDotNet@2
       displayName: 'Install .NET 8 SDK'
       inputs:
@@ -79,10 +75,17 @@ stages:
         includeNuGetOrg: true
 
     - task: DotNetCoreCLI@2
-      displayName: 'Run automated tests'
+      displayName: 'Run automated tests with coverage'
       inputs:
         command: 'test'
         projects: '$(testProject)'
-        arguments: '--configuration $(buildConfiguration) --no-restore'
+        arguments: '--configuration $(buildConfiguration) --collect "XPlat Code Coverage"'
         publishTestResults: true
         testRunTitle: 'Gift of the Givers Automated Tests'
+
+    - task: PublishCodeCoverageResults@2
+      displayName: 'Publish code coverage'
+      inputs:
+        summaryFileLocation: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+        pathToSources: '$(System.DefaultWorkingDirectory)'
+        failIfCoverageEmpty: false

@@ -5,41 +5,60 @@ using GiftOfTheGivers.Web.Data.Relief;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =========================================================
-// AZURE SQL CONNECTION
-// =========================================================
+var isDevelopment = builder.Environment.IsDevelopment();
 
-var azureSqlConnection = builder.Configuration
-    .GetConnectionString("AzureSqlConnection")
-    ?? throw new InvalidOperationException(
+var azureSqlConnection =
+    builder.Configuration.GetConnectionString("AzureSqlConnection");
+
+var localIdentityConnection =
+    builder.Configuration.GetConnectionString("LocalIdentityConnection");
+
+var localReliefConnection =
+    builder.Configuration.GetConnectionString("LocalReliefConnection");
+
+// Validate the connections required for the current environment.
+if (isDevelopment)
+{
+    if (string.IsNullOrWhiteSpace(localIdentityConnection) ||
+        string.IsNullOrWhiteSpace(localReliefConnection))
+    {
+        throw new InvalidOperationException(
+            "Local development database connections are not configured.");
+    }
+}
+else if (string.IsNullOrWhiteSpace(azureSqlConnection))
+{
+    throw new InvalidOperationException(
         "Connection string 'AzureSqlConnection' was not found.");
+}
 
-// =========================================================
-// ASP.NET IDENTITY DATABASE
-// =========================================================
-
-// ASP.NET Identity now uses the same Azure SQL database
-// as the relief-management data.
-//
-// Identity creates its own AspNet* tables and does not
-// replace the existing domain Users table.
-
+// Identity database.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseAzureSql(azureSqlConnection));
+{
+    if (isDevelopment)
+    {
+        options.UseSqlServer(localIdentityConnection!);
+    }
+    else
+    {
+        options.UseAzureSql(azureSqlConnection!);
+    }
+});
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-// =========================================================
-// RELIEF MANAGEMENT DATABASE
-// =========================================================
-
+// Relief-management database.
 builder.Services.AddDbContext<ReliefManagementContext>(options =>
-    options.UseAzureSql(azureSqlConnection));
+{
+    if (isDevelopment)
+    {
+        options.UseSqlServer(localReliefConnection!);
+    }
+    else
+    {
+        options.UseAzureSql(azureSqlConnection!);
+    }
+});
 
-// =========================================================
-// ASP.NET IDENTITY
-// =========================================================
-
+// ASP.NET Core Identity.
 builder.Services
     .AddDefaultIdentity<IdentityUser>(options =>
     {
@@ -54,10 +73,7 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// =========================================================
-// AUTHENTICATION COOKIE ROUTES
-// =========================================================
-
+// Authentication cookie routes.
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -65,27 +81,38 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// =========================================================
-// MVC
-// =========================================================
-
+// MVC.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// =========================================================
-// SEED IDENTITY ROLES AND EMPLOYEE ACCOUNT
-// =========================================================
-
+// Initialise local databases only in Development.
+// Production continues to use the existing Azure SQL configuration.
 using (var scope = app.Services.CreateScope())
 {
+    if (app.Environment.IsDevelopment())
+    {
+        var identityDb =
+            scope.ServiceProvider
+                .GetRequiredService<ApplicationDbContext>();
+
+        await identityDb.Database.MigrateAsync();
+
+        var reliefDb =
+            scope.ServiceProvider
+                .GetRequiredService<ReliefManagementContext>();
+
+        // ReliefManagementContext has no migration files of its own.
+        // This creates its schema in the separate local development DB.
+        await reliefDb.Database.EnsureCreatedAsync();
+        await DevelopmentDataSeeder.SeedAsync(reliefDb);
+    }
+
+    // Preserve the existing role and Employee identity seeding.
     await IdentitySeed.SeedAsync(scope.ServiceProvider);
 }
 
-// =========================================================
-// HTTP PIPELINE
-// =========================================================
-
+// HTTP pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
