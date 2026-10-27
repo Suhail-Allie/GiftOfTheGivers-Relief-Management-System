@@ -14,9 +14,9 @@ permissions:
 
 jobs:
   build-test:
-    name: Build, Unit Tests and Selenium UI Tests
+    name: Build and Automated Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
 
     services:
       sqlserver:
@@ -34,6 +34,13 @@ jobs:
           --health-retries 18
           --health-start-period 45s
 
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
+
     env:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://127.0.0.1:5080"
@@ -49,6 +56,9 @@ jobs:
       GOTG_TEST_EMPLOYEE_PASSWORD: "Ci_Employee_Only_2026!"
       GOTG_TEST_BASE_URL: "http://127.0.0.1:5080"
 
+      FUNCTIONS_WORKER_RUNTIME: "dotnet-isolated"
+      AzureWebJobsStorage: "UseDevelopmentStorage=true"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -60,14 +70,49 @@ jobs:
             8.0.x
             10.0.x
 
-      - name: Display SDK information
-        run: dotnet --info
+      - name: Set up Node.js for Azure Functions Core Tools
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Azure Functions Core Tools v4
+        run: npm install --global azure-functions-core-tools@4 --unsafe-perm true
+
+      - name: Display tool versions
+        run: |
+          dotnet --info
+          func --version
+          node --version
 
       - name: Restore solution
         run: dotnet restore GiftOfTheGivers.slnx
 
       - name: Build solution
         run: dotnet build GiftOfTheGivers.slnx --configuration Release --no-restore
+
+      - name: Wait for Azurite
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=false
+
+          for attempt in $(seq 1 30); do
+            if timeout 2 bash -c '</dev/tcp/127.0.0.1/10000' 2>/dev/null; then
+              ready=true
+              break
+            fi
+
+            echo "Waiting for Azurite ($attempt/30)..."
+            sleep 2
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            echo "Azurite did not become ready."
+            docker ps -a
+            exit 1
+          fi
+
+          echo "Azurite is ready."
 
       - name: Prepare temporary CI databases
         shell: bash
@@ -118,6 +163,55 @@ jobs:
 
           echo "Both temporary CI databases are ready."
 
+      - name: Start Azure Functions host
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd GiftOfTheGivers.Functions
+
+          nohup func start --port 7236 --verbose \
+            > ../functions-host.log 2>&1 &
+
+          echo $! > ../functions-host.pid
+          echo "Started the Functions host process."
+
+      - name: Wait for tax certificate endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          ready=false
+
+          for attempt in $(seq 1 90); do
+            response_code="$(curl --silent --show-error \
+              --output /tmp/function-probe.json \
+              --write-out '%{http_code}' \
+              --max-time 4 \
+              'http://127.0.0.1:7236/api/GenerateTaxCertificate?donationId=99999&donorName=CIProbe' 2>/dev/null || true)"
+
+            if [[ "$response_code" == "200" ]]; then
+              echo "Tax certificate endpoint is responding."
+              cat /tmp/function-probe.json
+              ready=true
+              break
+            fi
+
+            if ! kill -0 "$(cat functions-host.pid)" 2>/dev/null; then
+              echo "Functions host exited during startup."
+              cat functions-host.log
+              exit 1
+            fi
+
+            echo "Waiting for Functions endpoint ($attempt/90); HTTP status: ${response_code:-none}"
+            sleep 3
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            echo "Tax certificate endpoint did not become ready."
+            cat functions-host.log
+            exit 1
+          fi
+
       - name: Run unit and integration tests
         run: >
           dotnet test
@@ -131,6 +225,8 @@ jobs:
       - name: Start web application
         shell: bash
         run: |
+          set -euo pipefail
+
           nohup dotnet run \
             --project GiftOfTheGivers.Web/GiftOfTheGivers.Web.csproj \
             --configuration Release \
@@ -145,12 +241,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          ready=false
 
           for attempt in $(seq 1 60); do
             if curl --fail --silent \
               "$GOTG_TEST_BASE_URL/Donation/Index" >/dev/null; then
-              echo "Web application is responding."
-              exit 0
+              ready=true
+              break
             fi
 
             if ! kill -0 "$(cat webapp.pid)" 2>/dev/null; then
@@ -159,13 +256,17 @@ jobs:
               exit 1
             fi
 
-            echo "Waiting for application startup ($attempt/60)..."
+            echo "Waiting for web application ($attempt/60)..."
             sleep 5
           done
 
-          echo "The application did not respond before the timeout."
-          cat webapp.log
-          exit 1
+          if [[ "$ready" != "true" ]]; then
+            echo "Web application did not become ready."
+            cat webapp.log
+            exit 1
+          fi
+
+          echo "Web application is responding."
 
       - name: Run Selenium UI tests
         run: >
@@ -176,7 +277,7 @@ jobs:
           --logger "trx;LogFileName=selenium-ui.trx"
           --results-directory TestResults/Selenium
 
-      - name: Upload CI test results and screenshots
+      - name: Upload CI test results and logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
@@ -184,6 +285,7 @@ jobs:
           path: |
             TestResults/**
             Task3-Evidence/Selenium/**
+            functions-host.log
             webapp.log
           if-no-files-found: warn
           retention-days: 14

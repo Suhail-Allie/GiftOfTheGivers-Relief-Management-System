@@ -1,9 +1,11 @@
+﻿using System.Collections.Generic;
 using GiftOfTheGivers.Web.Controllers;
 using GiftOfTheGivers.Web.Data.Relief;
 using GiftOfTheGivers.Web.Models.Database;
 using GiftOfTheGivers.Web.Models.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
@@ -60,15 +62,34 @@ public class DonationControllerIntegrationTests
         TestReliefManagementContext context)
     {
         var controller = new DonationController(context);
+        var httpContext = new DefaultHttpContext();
 
         controller.ControllerContext = new ControllerContext
         {
-            HttpContext = new DefaultHttpContext()
+            HttpContext = httpContext
         };
+
+        controller.TempData = new TempDataDictionary(
+            httpContext,
+            new TestTempDataProvider());
 
         return controller;
     }
 
+    private sealed class TestTempDataProvider : ITempDataProvider
+    {
+        public IDictionary<string, object> LoadTempData(
+            HttpContext context)
+        {
+            return new Dictionary<string, object>();
+        }
+
+        public void SaveTempData(
+            HttpContext context,
+            IDictionary<string, object> values)
+        {
+        }
+    }
     private static DonationViewModel ValidAnonymousDonation()
     {
         return new DonationViewModel
@@ -226,3 +247,4 @@ internal sealed class TestReliefManagementContext
         }
     }
 }
+
