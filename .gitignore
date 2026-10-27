@@ -499,3 +499,8 @@ GiftOfTheGivers.Web/app.db
 
 # Local Azure deployment settings
 GiftOfTheGivers.Functions/Properties/serviceDependencies.local.json
+
+# Temporary SQLite demo databases
+*.db
+*.db-shm
+*.db-wal

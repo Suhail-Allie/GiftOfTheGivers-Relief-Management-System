@@ -1,0 +1,9 @@
+﻿.git/
+.github/
+.vs/
+**/bin/
+**/obj/
+**/appsettings*.json
+**/local.settings.json
+**/*.user
+Task3-Evidence/

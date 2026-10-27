@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using GiftOfTheGivers.Web.Data;
 using GiftOfTheGivers.Web.Data.Relief;
@@ -6,6 +6,7 @@ using GiftOfTheGivers.Web.Data.Relief;
 var builder = WebApplication.CreateBuilder(args);
 
 var isDevelopment = builder.Environment.IsDevelopment();
+var isDemo = builder.Environment.IsEnvironment("Demo");
 
 var azureSqlConnection =
     builder.Configuration.GetConnectionString("AzureSqlConnection");
@@ -16,7 +17,15 @@ var localIdentityConnection =
 var localReliefConnection =
     builder.Configuration.GetConnectionString("LocalReliefConnection");
 
-// Validate the connections required for the current environment.
+var demoIdentityConnection =
+    builder.Configuration.GetConnectionString("DemoIdentityConnection")
+    ?? "Data Source=gotg-identity-demo.db";
+
+var demoReliefConnection =
+    builder.Configuration.GetConnectionString("DemoReliefConnection")
+    ?? "Data Source=gotg-relief-demo.db";
+
+// Validate only the connections required for the selected environment.
 if (isDevelopment)
 {
     if (string.IsNullOrWhiteSpace(localIdentityConnection) ||
@@ -26,7 +35,7 @@ if (isDevelopment)
             "Local development database connections are not configured.");
     }
 }
-else if (string.IsNullOrWhiteSpace(azureSqlConnection))
+else if (!isDemo && string.IsNullOrWhiteSpace(azureSqlConnection))
 {
     throw new InvalidOperationException(
         "Connection string 'AzureSqlConnection' was not found.");
@@ -39,6 +48,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
         options.UseSqlServer(localIdentityConnection!);
     }
+    else if (isDemo)
+    {
+        options.UseSqlite(demoIdentityConnection);
+    }
     else
     {
         options.UseAzureSql(azureSqlConnection!);
@@ -46,17 +59,32 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 // Relief-management database.
-builder.Services.AddDbContext<ReliefManagementContext>(options =>
+if (isDemo)
 {
-    if (isDevelopment)
+    builder.Services.AddScoped<ReliefManagementContext>(_ =>
     {
-        options.UseSqlServer(localReliefConnection!);
-    }
-    else
+        var options =
+            new DbContextOptionsBuilder<ReliefManagementContext>()
+                .UseSqlite(demoReliefConnection)
+                .Options;
+
+        return new DemoReliefManagementContext(options);
+    });
+}
+else
+{
+    builder.Services.AddDbContext<ReliefManagementContext>(options =>
     {
-        options.UseAzureSql(azureSqlConnection!);
-    }
-});
+        if (isDevelopment)
+        {
+            options.UseSqlServer(localReliefConnection!);
+        }
+        else
+        {
+            options.UseAzureSql(azureSqlConnection!);
+        }
+    });
+}
 
 // ASP.NET Core Identity.
 builder.Services
@@ -73,7 +101,6 @@ builder.Services
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// Authentication cookie routes.
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -81,16 +108,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// MVC.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Initialise local databases only in Development.
-// Production continues to use the existing Azure SQL configuration.
+// Initialise the databases according to the selected environment.
 using (var scope = app.Services.CreateScope())
 {
-    if (app.Environment.IsDevelopment())
+    if (isDevelopment)
     {
         var identityDb =
             scope.ServiceProvider
@@ -102,31 +127,53 @@ using (var scope = app.Services.CreateScope())
             scope.ServiceProvider
                 .GetRequiredService<ReliefManagementContext>();
 
-        // ReliefManagementContext has no migration files of its own.
-        // This creates its schema in the separate local development DB.
+        await reliefDb.Database.EnsureCreatedAsync();
+        await DevelopmentDataSeeder.SeedAsync(reliefDb);
+    }
+    else if (isDemo)
+    {
+        // Use EnsureCreated for the SQLite demonstration database.
+        // Do not run the existing SQL Server-specific migrations here.
+        var identityDb =
+            scope.ServiceProvider
+                .GetRequiredService<ApplicationDbContext>();
+
+        await identityDb.Database.EnsureCreatedAsync();
+
+        var reliefDb =
+            scope.ServiceProvider
+                .GetRequiredService<ReliefManagementContext>();
+
         await reliefDb.Database.EnsureCreatedAsync();
         await DevelopmentDataSeeder.SeedAsync(reliefDb);
     }
 
-    // Preserve the existing role and Employee identity seeding.
+    // Create development/demo roles and employee accounts when configured.
     await IdentitySeed.SeedAsync(scope.ServiceProvider);
 }
 
 // HTTP pipeline.
-if (app.Environment.IsDevelopment())
+if (isDevelopment)
 {
     app.UseMigrationsEndPoint();
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+
+    if (!isDemo)
+    {
+        app.UseHsts();
+    }
 }
 
-app.UseHttpsRedirection();
+// Render terminates external HTTPS. The demo container serves HTTP internally.
+if (!isDemo)
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
