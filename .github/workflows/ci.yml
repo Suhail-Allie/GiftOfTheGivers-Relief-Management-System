@@ -1,0 +1,189 @@
+﻿name: Gift of the Givers CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: Build, Unit Tests and Selenium UI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: "CiOnly_Db_2026!Sql"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'CiOnly_Db_2026!Sql' -C -Q 'SELECT 1' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 18
+          --health-start-period 45s
+
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "http://127.0.0.1:5080"
+
+      ConnectionStrings__LocalIdentityConnection: "Server=127.0.0.1,1433;Database=GiftOfTheGiversIdentityCi;User ID=sa;Password=CiOnly_Db_2026!Sql;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=True"
+
+      ConnectionStrings__LocalReliefConnection: "Server=127.0.0.1,1433;Database=GiftOfTheGiversReliefCi;User ID=sa;Password=CiOnly_Db_2026!Sql;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=True"
+
+      SeedUsers__EmployeeEmail: "ci.employee@example.com"
+      SeedUsers__EmployeePassword: "Ci_Employee_Only_2026!"
+
+      GOTG_TEST_EMPLOYEE_EMAIL: "ci.employee@example.com"
+      GOTG_TEST_EMPLOYEE_PASSWORD: "Ci_Employee_Only_2026!"
+      GOTG_TEST_BASE_URL: "http://127.0.0.1:5080"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install .NET 8 and .NET 10 SDKs
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Display SDK information
+        run: dotnet --info
+
+      - name: Restore solution
+        run: dotnet restore GiftOfTheGivers.slnx
+
+      - name: Build solution
+        run: dotnet build GiftOfTheGivers.slnx --configuration Release --no-restore
+
+      - name: Prepare temporary CI databases
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          container_id="$(docker ps --filter 'ancestor=mcr.microsoft.com/mssql/server:2022-latest' --format '{{.ID}}' | head -n 1)"
+
+          if [[ -z "$container_id" ]]; then
+            echo "SQL Server service container was not found."
+            docker ps -a
+            exit 1
+          fi
+
+          ready=false
+
+          for attempt in $(seq 1 30); do
+            if docker exec "$container_id" \
+              /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost \
+              -U sa \
+              -P 'CiOnly_Db_2026!Sql' \
+              -C \
+              -Q "SELECT 1" >/dev/null 2>&1; then
+              ready=true
+              break
+            fi
+
+            echo "Waiting for SQL Server ($attempt/30)..."
+            sleep 5
+          done
+
+          if [[ "$ready" != "true" ]]; then
+            echo "SQL Server did not become ready."
+            docker logs "$container_id"
+            exit 1
+          fi
+
+          docker exec "$container_id" \
+            /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost \
+            -U sa \
+            -P 'CiOnly_Db_2026!Sql' \
+            -C \
+            -b \
+            -Q "IF DB_ID(N'GiftOfTheGiversIdentityCi') IS NULL CREATE DATABASE [GiftOfTheGiversIdentityCi];
+                IF DB_ID(N'GiftOfTheGiversReliefCi') IS NULL CREATE DATABASE [GiftOfTheGiversReliefCi];"
+
+          echo "Both temporary CI databases are ready."
+
+      - name: Run unit and integration tests
+        run: >
+          dotnet test
+          GiftOfTheGivers.Tests/GiftOfTheGivers.Tests.csproj
+          --configuration Release
+          --no-build
+          --collect "XPlat Code Coverage"
+          --logger "trx;LogFileName=unit-integration.trx"
+          --results-directory TestResults/UnitIntegration
+
+      - name: Start web application
+        shell: bash
+        run: |
+          nohup dotnet run \
+            --project GiftOfTheGivers.Web/GiftOfTheGivers.Web.csproj \
+            --configuration Release \
+            --no-build \
+            --no-launch-profile \
+            > webapp.log 2>&1 &
+
+          echo $! > webapp.pid
+          echo "Started the web application."
+
+      - name: Wait for web application
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent \
+              "$GOTG_TEST_BASE_URL/Donation/Index" >/dev/null; then
+              echo "Web application is responding."
+              exit 0
+            fi
+
+            if ! kill -0 "$(cat webapp.pid)" 2>/dev/null; then
+              echo "Web application exited during startup."
+              cat webapp.log
+              exit 1
+            fi
+
+            echo "Waiting for application startup ($attempt/60)..."
+            sleep 5
+          done
+
+          echo "The application did not respond before the timeout."
+          cat webapp.log
+          exit 1
+
+      - name: Run Selenium UI tests
+        run: >
+          dotnet test
+          GiftOfTheGivers.UI.Tests/GiftOfTheGivers.UI.Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=selenium-ui.trx"
+          --results-directory TestResults/Selenium
+
+      - name: Upload CI test results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gift-of-the-givers-ci-evidence
+          path: |
+            TestResults/**
+            Task3-Evidence/Selenium/**
+            webapp.log
+          if-no-files-found: warn
+          retention-days: 14
