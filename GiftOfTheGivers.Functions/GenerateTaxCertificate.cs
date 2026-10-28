@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -16,7 +16,7 @@ public class GenerateTaxCertificate
 
     [Function("GenerateTaxCertificate")]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post")]
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")]
         HttpRequestData req)
     {
         _logger.LogInformation(
