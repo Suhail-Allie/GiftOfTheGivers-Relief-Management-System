@@ -17,5 +17,8 @@ public partial class TaxCertificate
 
     public string CertificateStatus { get; set; } = null!;
 
+    // Tracks delivery independently from certificate generation.
+    public string DeliveryStatus { get; set; } = "Pending";
+
     public virtual Donation Donation { get; set; } = null!;
 }

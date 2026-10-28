@@ -145,6 +145,7 @@ using (var scope = app.Services.CreateScope())
                 .GetRequiredService<ReliefManagementContext>();
 
         await reliefDb.Database.EnsureCreatedAsync();
+        await EnsureDemoDeliveryStatusColumnAsync(reliefDb);
         await DevelopmentDataSeeder.SeedAsync(reliefDb);
     }
 
@@ -188,3 +189,69 @@ app.MapRazorPages()
     .WithStaticAssets();
 
 app.Run();
+
+// Applies small Demo-only schema updates to the SQLite relief database.
+static async Task EnsureDemoDeliveryStatusColumnAsync(
+    ReliefManagementContext context)
+{
+    var connection = context.Database.GetDbConnection();
+    var openedHere =
+        connection.State != System.Data.ConnectionState.Open;
+
+    if (openedHere)
+    {
+        await connection.OpenAsync();
+    }
+
+    try
+    {
+        var columnExists = false;
+
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA table_info('TaxCertificates');";
+
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                if (string.Equals(
+                    reader.GetString(1),
+                    "DeliveryStatus",
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    columnExists = true;
+                    break;
+                }
+            }
+        }
+
+        if (columnExists)
+        {
+            Console.WriteLine(
+                "Demo schema update: DeliveryStatus already exists.");
+            return;
+        }
+
+        await using (var alterCommand = connection.CreateCommand())
+        {
+            alterCommand.CommandText =
+                "ALTER TABLE \"TaxCertificates\" " +
+                "ADD COLUMN \"DeliveryStatus\" TEXT " +
+                "NOT NULL DEFAULT 'Pending';";
+
+            await alterCommand.ExecuteNonQueryAsync();
+        }
+
+        Console.WriteLine(
+            "Demo schema update: Added TaxCertificates.DeliveryStatus " +
+            "with default Pending.");
+    }
+    finally
+    {
+        if (openedHere)
+        {
+            await connection.CloseAsync();
+        }
+    }
+}

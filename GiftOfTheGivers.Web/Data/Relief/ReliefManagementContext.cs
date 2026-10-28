@@ -232,6 +232,9 @@ public partial class ReliefManagementContext : DbContext
                 .HasDefaultValue("Generated", "DF_TaxCertificates_Status");
             entity.Property(e => e.DonationId).HasColumnName("DonationID");
             entity.Property(e => e.FileReference).HasMaxLength(500);
+            entity.Property(e => e.DeliveryStatus)
+                .HasMaxLength(20)
+                .HasDefaultValue("Pending");
             entity.Property(e => e.GeneratedAt).HasDefaultValueSql("(sysutcdatetime())", "DF_TaxCertificates_GeneratedAt");
 
             entity.HasOne(d => d.Donation).WithOne(p => p.TaxCertificate)
