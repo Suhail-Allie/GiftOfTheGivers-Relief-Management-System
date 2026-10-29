@@ -1,0 +1,57 @@
+name: SQL Server Schema Deployment Workaround
+
+on:
+  workflow_run:
+    workflows: ["Gift of the Givers CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  schema-update:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: ${{ secrets.CI_SQLSERVER_SA_PASSWORD }}
+        ports:
+          - 1433:1433
+
+    steps:
+      - name: Check out the exact commit that passed CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - name: Install SQL Server client library
+        run: npm install --prefix "$RUNNER_TEMP/gotg-sql-client" --no-save mssql@11
+
+      - name: Apply and verify the T-SQL schema update
+        env:
+          SQL_SERVER_PASSWORD: ${{ secrets.CI_SQLSERVER_SA_PASSWORD }}
+          NODE_PATH: ${{ runner.temp }}/gotg-sql-client/node_modules
+        run: |
+          set -o pipefail
+          node ./Task3-Evidence/SchemaUpdate/Run-SqlServerDeploymentDemo.cjs 2>&1 \
+            | tee "$RUNNER_TEMP/sql-schema-deployment-report.txt"
+
+      - name: Upload schema deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sql-server-schema-deployment-evidence
+          path: ${{ runner.temp }}/sql-schema-deployment-report.txt
+          if-no-files-found: ignore
+          retention-days: 30
